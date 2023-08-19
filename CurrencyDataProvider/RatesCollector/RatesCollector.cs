@@ -1,4 +1,5 @@
-﻿using CurrencyDataProvider.Domain;
+﻿using CurrencyDataProvider.Data.EF;
+using CurrencyDataProvider.Domain;
 using Newtonsoft.Json;
 
 namespace RatesCollector
@@ -18,17 +19,22 @@ namespace RatesCollector
         {
             var url = GetFixerUrl();
 
-            ExchangeRate result;
+            ExchangeRate exchangeRates;
 
             using (var client = new HttpClient())
             {
                 var response = client.GetAsync(url).Result;
                 response.EnsureSuccessStatusCode();
 
-                result = DeserializeData(response.Content.ReadAsStringAsync().Result);
+                exchangeRates = DeserializeData(response.Content.ReadAsStringAsync().Result);
             }
 
-            //TODO: Save in Database here!!!
+            
+            if (exchangeRates != null)
+            {
+                var currencyInformation = ConverData(exchangeRates);
+                SaveData(currencyInformation);
+            }
         }
 
         private string GetFixerUrl()
@@ -39,6 +45,42 @@ namespace RatesCollector
         private ExchangeRate DeserializeData(string data)
         {
             return JsonConvert.DeserializeObject<ExchangeRate>(data);
+        }
+
+        private void SaveData(CurrenciesInformation currenciesInformation)
+        {
+            using (var context = new CurrencyDataProviderDbContext())
+            {
+                context.CurrenciesInformations.Add(currenciesInformation);
+                context.SaveChanges();
+            }
+        }
+
+        private CurrenciesInformation ConverData(ExchangeRate data)
+        {
+            var rates = new List<Rate>();
+
+            foreach (var item in data.Rates)
+            {
+                decimal.TryParse(item.Value, out var amount);
+
+                var rate = new Rate()
+                {
+                    Currency = item.Key,
+                    Amount = amount
+                };
+
+                rates.Add(rate);
+            }
+
+            var currencyInfo = new CurrenciesInformation()
+            {
+                TimeStamp = int.Parse(data.TimeStamp),
+                Date = DateTime.Parse(data.Date),
+                Rates = rates
+            };
+
+            return currencyInfo;
         }
     }
 }
