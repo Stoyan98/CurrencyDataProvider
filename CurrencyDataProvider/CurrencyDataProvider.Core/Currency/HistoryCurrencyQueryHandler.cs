@@ -20,19 +20,19 @@ namespace CurrencyDataProvider.Core.Currency
 
         public async ValueTask<List<HistoryCurrencyQueryResult>> HandleAsync(HistoryCurrencyQuery query)
         {
-            int.TryParse(query.periodInHours, out int period);
+            int.TryParse(query.PeriodInHours, out int period);
             var dateNowUtc22 = DateTime.UtcNow.AddHours(-period);
             var resultDate = new DateTimeOffset(DateTime.UtcNow.AddHours(-period)).ToUnixTimeSeconds().ToString();
             int.TryParse(resultDate, out int fromTimeStamp);
 
-            var historyRecords = await CurrencyRepository.GetHistoryForCurrency(query.currency, fromTimeStamp);
+            var historyRecords = await CurrencyRepository.GetHistoryForCurrency(query.Currency, fromTimeStamp);
 
             var result = new List<HistoryCurrencyQueryResult>();
 
             foreach ( var historyRecord in historyRecords )
             {
                 var date = DateTimeOffset.FromUnixTimeSeconds(historyRecord.TimeStamp).DateTime;
-                var rate = historyRecord.Rates.FirstOrDefault(x => x.Currency == query.currency);
+                var rate = historyRecord.Rates.FirstOrDefault(x => x.Currency == query.Currency);
                 result.Add(new HistoryCurrencyQueryResult(rate.Currency, rate.Amount, date));
             }
 

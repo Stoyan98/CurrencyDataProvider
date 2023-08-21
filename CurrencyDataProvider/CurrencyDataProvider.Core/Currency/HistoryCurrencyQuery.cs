@@ -1,4 +1,4 @@
 ﻿namespace CurrencyDataProvider.Core.Currency
 {
-    public record HistoryCurrencyQuery(string currency, string periodInHours);
+    public record HistoryCurrencyQuery(string Currency, string PeriodInHours);
 }

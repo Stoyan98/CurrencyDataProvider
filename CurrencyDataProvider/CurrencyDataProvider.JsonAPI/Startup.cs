@@ -36,7 +36,8 @@ namespace CurrencyDataProvider.JsonAPI
             services.AddTransient<ICommandHandler<AddCurrenciesInformationCommand>, AddCurrenciesInformationCommandHandler>()
                 .AddTransient<ICommandHandler<AddRequestCommand>, AddRequestCommandHandler>()
                 .AddTransient<IQueryHandler<CurrentCurrencyQuery, CurrentCurrencyQueryResult>, CurrentCurrencyQueryHandler>()
-                .AddTransient<IQueryHandler<HistoryCurrencyQuery, List<HistoryCurrencyQueryResult>>, HistoryCurrencyQueryHandler>();
+                .AddTransient<IQueryHandler<HistoryCurrencyQuery, List<HistoryCurrencyQueryResult>>, HistoryCurrencyQueryHandler>()
+                .AddTransient<IQueryHandler<RequestQuery, RequestQueryResult>, RequestQueryHandler>();
 
             services.AddDbContext<CurrencyDataProviderDbContext>();
             //services.AddDbContext<CurrencyDataProviderDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
