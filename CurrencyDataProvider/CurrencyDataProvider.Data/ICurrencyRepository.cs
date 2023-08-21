@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using CurrencyDataProvider.Domain;
 
 namespace CurrencyDataProvider.Data
@@ -18,5 +19,7 @@ namespace CurrencyDataProvider.Data
         /// <param name="currency"></param>
         /// <returns></returns>
         Task<CurrenciesInformation> GetLatestCurrencyRateAsync(string currency);
+
+        Task<List<CurrenciesInformation>> GetHistoryForCurrency(string currency, int fromTimeStamp);
     }
 }

@@ -13,6 +13,7 @@ using CurrencyDataProvider.Core.Base;
 using CurrencyDataProvider.Core.Currency;
 using CurrencyDataProvider.Core.Request;
 using CurrencyDataProvider.Data;
+using System.Collections.Generic;
 
 namespace CurrencyDataProvider.JsonAPI
 {
@@ -34,7 +35,8 @@ namespace CurrencyDataProvider.JsonAPI
 
             services.AddTransient<ICommandHandler<AddCurrenciesInformationCommand>, AddCurrenciesInformationCommandHandler>()
                 .AddTransient<ICommandHandler<AddRequestCommand>, AddRequestCommandHandler>()
-                .AddTransient<IQueryHandler<CurrentCurrencyQuery, CurrentCurrencyQueryResult>, CurrentCurrencyQueryHandler>();
+                .AddTransient<IQueryHandler<CurrentCurrencyQuery, CurrentCurrencyQueryResult>, CurrentCurrencyQueryHandler>()
+                .AddTransient<IQueryHandler<HistoryCurrencyQuery, List<HistoryCurrencyQueryResult>>, HistoryCurrencyQueryHandler>();
 
             services.AddDbContext<CurrencyDataProviderDbContext>();
             //services.AddDbContext<CurrencyDataProviderDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));

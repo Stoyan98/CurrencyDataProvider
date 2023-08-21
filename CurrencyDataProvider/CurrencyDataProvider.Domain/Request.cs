@@ -2,7 +2,7 @@
 
 namespace CurrencyDataProvider.Domain
 {
-    public class Request
+    public sealed class Request
     {
         public int Id { get; set; }
 
