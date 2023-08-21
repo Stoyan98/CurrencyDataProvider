@@ -3,9 +3,16 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Http;
+
+using System.Net;
 
 using CurrencyDataProvider.Data.EF;
-using Microsoft.EntityFrameworkCore;
+using CurrencyDataProvider.Core.Base;
+using CurrencyDataProvider.Core.Currency;
+using CurrencyDataProvider.Core.Request;
+using CurrencyDataProvider.Data;
 
 namespace CurrencyDataProvider.JsonAPI
 {
@@ -22,21 +29,49 @@ namespace CurrencyDataProvider.JsonAPI
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+
+            services.AddHealthChecks();
+
+            services.AddTransient<ICommandHandler<AddCurrenciesInformationCommand>, AddCurrenciesInformationCommandHandler>()
+                .AddTransient<ICommandHandler<AddRequestCommand>, AddRequestCommandHandler>()
+                .AddTransient<IQueryHandler<CurrentCurrencyQuery, CurrentCurrencyQueryResult>, CurrentCurrencyQueryHandler>();
+
             services.AddDbContext<CurrencyDataProviderDbContext>();
             //services.AddDbContext<CurrencyDataProviderDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+
+            services.AddTransient<IRequestRepository, RequestRepository>()
+                .AddTransient<ICurrencyRepository, CurrencyRepository>();
+
+            services.AddSwaggerGen();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            if (env.IsDevelopment())
+            app.UseHealthChecks("/health");
+
+            app.UseExceptionHandler(appError =>
             {
-                app.UseDeveloperExceptionPage();
-            }
+                appError.Run(async context =>
+                {
+                    context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                    context.Response.ContentType = "application/json";
+
+                    var contextFeature = context.Features.Get<IExceptionHandlerFeature>();
+                    if (contextFeature != null)
+                    {
+                        //TODO: Logging logic goes here!!!
+                        await context.Response.WriteAsync(context.Response.StatusCode + " Internal Server Error");
+                    }
+                });
+            });
 
             app.UseHttpsRedirection();
 
             app.UseRouting();
+
+            app.UseSwagger();
+            app.UseSwaggerUI();
 
             app.UseAuthorization();
 

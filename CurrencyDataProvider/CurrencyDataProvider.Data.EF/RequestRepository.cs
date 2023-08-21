@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CurrencyDataProvider.Data.EF
 {
-    internal class RequestRepository : IRequestRepository
+    public class RequestRepository : IRequestRepository
     {
         public RequestRepository(CurrencyDataProviderDbContext dbContext)
         {

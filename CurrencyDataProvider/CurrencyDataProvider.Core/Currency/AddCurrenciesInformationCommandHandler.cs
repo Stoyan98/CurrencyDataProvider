@@ -5,7 +5,7 @@ using CurrencyDataProvider.Domain;
 
 namespace CurrencyDataProvider.Core.Currency
 {
-    internal class AddCurrenciesInformationCommandHandler : ICommandHandler<AddCurrenciesInformationCommand>
+    public class AddCurrenciesInformationCommandHandler : ICommandHandler<AddCurrenciesInformationCommand>
     {
         public AddCurrenciesInformationCommandHandler(ICurrencyRepository currencyRepository)
         {

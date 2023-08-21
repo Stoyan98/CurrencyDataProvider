@@ -4,7 +4,7 @@ using CurrencyDataProvider.Data;
 
 namespace CurrencyDataProvider.Core.Request
 {
-    internal class AddRequestCommandHandler : ICommandHandler<AddRequestCommand>
+    public class AddRequestCommandHandler : ICommandHandler<AddRequestCommand>
     {
         public AddRequestCommandHandler(IRequestRepository requestRepository)
         {
