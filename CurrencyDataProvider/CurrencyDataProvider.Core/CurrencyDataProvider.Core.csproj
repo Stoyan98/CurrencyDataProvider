@@ -4,4 +4,9 @@
     <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\CurrencyDataProvider.Data\CurrencyDataProvider.Data.csproj" />
+    <ProjectReference Include="..\CurrencyDataProvider.Domain\CurrencyDataProvider.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

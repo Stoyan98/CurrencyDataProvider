@@ -8,6 +8,8 @@ namespace CurrencyDataProvider.Data.EF
         public DbSet<CurrenciesInformation> CurrenciesInformations { get; set; }
         public DbSet<Rate> Rates { get; set; }
 
+        public DbSet<Request> Requests { get; set; }
+
         public CurrencyDataProviderDbContext()
         {
         }
