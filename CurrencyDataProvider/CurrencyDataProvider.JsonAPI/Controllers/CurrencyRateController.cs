@@ -11,9 +11,9 @@ namespace CurrencyDataProvider.JsonAPI.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class CurrenyRateController : Controller
+    public class CurrencyRateController : Controller
     {
-        public CurrenyRateController(
+        public CurrencyRateController(
             IQueryHandler<CurrentCurrencyQuery, CurrentCurrencyQueryResult> currentCurrencyQueryHandler,
             IQueryHandler<HistoryCurrencyQuery, List<HistoryCurrencyQueryResult>> historyCurrencyQueryHandler)
         {

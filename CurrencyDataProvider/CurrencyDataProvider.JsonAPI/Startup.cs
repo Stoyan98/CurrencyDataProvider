@@ -73,8 +73,11 @@ namespace CurrencyDataProvider.JsonAPI
 
             app.UseRouting();
 
-            app.UseSwagger();
-            app.UseSwaggerUI();
+            if (env.IsDevelopment())
+            {
+                app.UseSwagger();
+                app.UseSwaggerUI();
+            }
 
             app.UseAuthorization();
 
