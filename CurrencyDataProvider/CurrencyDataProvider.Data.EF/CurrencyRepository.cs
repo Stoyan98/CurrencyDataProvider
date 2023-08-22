@@ -1,46 +1,44 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
-using CurrencyDataProvider.Domain;
+using System.Collections.Generic;
+
 using Microsoft.EntityFrameworkCore;
+
+using CurrencyDataProvider.Domain;
 
 namespace CurrencyDataProvider.Data.EF
 {
     public class CurrencyRepository : ICurrencyRepository
     {
+        private readonly CurrencyDataProviderDbContext _dbContext;
+
         public CurrencyRepository(CurrencyDataProviderDbContext dbContext)
         {
-            DbContext = dbContext;
+            _dbContext = dbContext;
         }
-
-        public CurrencyDataProviderDbContext DbContext { get; set; }
 
         public async Task SaveCurrencyInfoAsync(CurrenciesInformation currenciesInformation)
         {
-            await DbContext.AddAsync(currenciesInformation);
-            await DbContext.SaveChangesAsync();
+            await _dbContext.AddAsync(currenciesInformation);
+            await _dbContext.SaveChangesAsync();
         }
 
         public async Task<CurrenciesInformation> GetLatestCurrencyRateAsync(string currency)
         {
-            var result = await DbContext.CurrenciesInformations
+            return await _dbContext.CurrenciesInformations
                                         .Include(x => x.Rates
                                                        .Where(r=>r.Currency == currency))
                                         .OrderBy(x=>x.Id)
                                         .LastOrDefaultAsync();
-
-            return result;
         }
 
         public async Task<List<CurrenciesInformation>> GetHistoryForCurrency(string currency, int fromTimeStamp)
         {
-            var result = await DbContext.CurrenciesInformations
+            return await _dbContext.CurrenciesInformations
                                         .Include(x=>x.Rates.Where(r=>r.Currency == currency))
                                         .Where(x=>x.TimeStamp > fromTimeStamp)
                                         .OrderBy(x=>x.TimeStamp)
                                         .ToListAsync();
-
-            return result;
         }
     }
 }

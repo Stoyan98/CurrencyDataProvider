@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+
 using CurrencyDataProvider.Core.Base;
 using CurrencyDataProvider.Data;
 
@@ -6,16 +7,16 @@ namespace CurrencyDataProvider.Core.Request
 {
     public class AddRequestCommandHandler : ICommandHandler<AddRequestCommand>
     {
+        private readonly IRequestRepository _requestRepository;
+
         public AddRequestCommandHandler(IRequestRepository requestRepository)
         {
-            RequestRepository = requestRepository;
+            _requestRepository = requestRepository;
         }
-
-        public IRequestRepository RequestRepository { get; set; }
 
         public async Task HandleAsync(AddRequestCommand command)
         {
-            await RequestRepository.SaveRequestAsync(
+            await _requestRepository.SaveRequestAsync(
                 new Domain.Request
                 {
                     ServiceName = command.ServiceName,

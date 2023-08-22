@@ -1,14 +1,14 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Distributed;
 
 using CurrencyDataProvider.Core.Base;
 using CurrencyDataProvider.Core.Currency;
 using CurrencyDataProvider.JsonAPI.DataContracts;
-using System.Collections.Generic;
 using CurrencyDataProvider.Core.Request;
-using System;
-using Microsoft.Extensions.Caching.Distributed;
 using CurrencyDataProvider.JsonAPI.Helpers;
 
 namespace CurrencyDataProvider.JsonAPI.Controllers
@@ -21,6 +21,10 @@ namespace CurrencyDataProvider.JsonAPI.Controllers
         private readonly string ServiceName = "JSON_Service";
         private readonly string RequestKey = "requestKey_{0}";
 
+        private readonly IQueryHandler<CurrentCurrencyQuery, CurrentCurrencyQueryResult> _currentCurrencyQueryHandler;
+        private readonly IQueryHandler<HistoryCurrencyQuery, List<HistoryCurrencyQueryResult>> _historyCurrencyQueryHandler;
+        private readonly IQueryHandler<RequestQuery, RequestQueryResult> _requestQueryHandler;
+        private readonly ICommandHandler<AddRequestCommand> _addRequestCommandHandler;
         private readonly IDistributedCache _cache;
 
         public CurrencyRateController(
@@ -30,20 +34,12 @@ namespace CurrencyDataProvider.JsonAPI.Controllers
             ICommandHandler<AddRequestCommand> addRequestCommandHandler,
             IDistributedCache cache)
         {
-            CurrentCurrencyQueryHandler = currentCurrencyQueryHandler;
-            HistoryCurrencyQueryHandler = historyCurrencyQueryHandler;
-            RequestQueryHandler = requestQueryHandler;
-            AddRequestCommandHandler = addRequestCommandHandler;
+            _currentCurrencyQueryHandler = currentCurrencyQueryHandler;
+            _historyCurrencyQueryHandler = historyCurrencyQueryHandler;
+            _requestQueryHandler = requestQueryHandler;
+            _addRequestCommandHandler = addRequestCommandHandler;
             _cache = cache;
         }
-
-        public IQueryHandler<CurrentCurrencyQuery, CurrentCurrencyQueryResult> CurrentCurrencyQueryHandler { get; set; }
-
-        public IQueryHandler<HistoryCurrencyQuery, List<HistoryCurrencyQueryResult>> HistoryCurrencyQueryHandler { get; set; }
-
-        public IQueryHandler<RequestQuery, RequestQueryResult> RequestQueryHandler { get; set; }
-
-        public ICommandHandler<AddRequestCommand> AddRequestCommandHandler { get; set; }
 
         [HttpPost("current")]
         public async Task<ActionResult<CurrentCurrencyQueryResult>> Current([FromBody] CurrentRequest request)
@@ -55,7 +51,7 @@ namespace CurrencyDataProvider.JsonAPI.Controllers
                 return BadRequest(string.Format(DuplicateMessateString, request.RequestId));
             }
 
-            return await CurrentCurrencyQueryHandler.HandleAsync(new CurrentCurrencyQuery(request.Currency));
+            return await _currentCurrencyQueryHandler.HandleAsync(new CurrentCurrencyQuery(request.Currency));
         }
 
         [HttpPost("history")]
@@ -68,7 +64,7 @@ namespace CurrencyDataProvider.JsonAPI.Controllers
                 return BadRequest(string.Format(DuplicateMessateString, request.RequestId));
             }
 
-            return await HistoryCurrencyQueryHandler.HandleAsync(new HistoryCurrencyQuery(request.Currency, request.Period));
+            return await _historyCurrencyQueryHandler.HandleAsync(new HistoryCurrencyQuery(request.Currency, request.Period));
         }
 
         private async Task<bool> HandleDuplicateRequestsAsync(string requestId, string clientId)
@@ -79,11 +75,11 @@ namespace CurrencyDataProvider.JsonAPI.Controllers
 
             if (cacheRequest is null)
             {
-                var existingRequest = await RequestQueryHandler.HandleAsync(new RequestQuery(requestId));
+                var existingRequest = await _requestQueryHandler.HandleAsync(new RequestQuery(requestId));
 
                 if (!existingRequest.IsExisting)
                 {
-                    await AddRequestCommandHandler.HandleAsync(new AddRequestCommand(ServiceName, requestId, DateTime.UtcNow, clientId));
+                    await _addRequestCommandHandler.HandleAsync(new AddRequestCommand(ServiceName, requestId, DateTime.UtcNow, clientId));
 
                     await _cache.SetRecordAsync(cacheKey, requestId);
 

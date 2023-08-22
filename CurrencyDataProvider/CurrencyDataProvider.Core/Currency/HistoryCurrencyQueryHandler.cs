@@ -1,22 +1,21 @@
-﻿using CurrencyDataProvider.Core.Base;
-using CurrencyDataProvider.Data;
-using CurrencyDataProvider.Domain;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+
+using CurrencyDataProvider.Core.Base;
+using CurrencyDataProvider.Data;
 
 namespace CurrencyDataProvider.Core.Currency
 {
     public class HistoryCurrencyQueryHandler : IQueryHandler<HistoryCurrencyQuery, List<HistoryCurrencyQueryResult>>
     {
+        private readonly ICurrencyRepository _currencyRepository;
+
         public HistoryCurrencyQueryHandler(ICurrencyRepository currencyRepository)
         {
-            CurrencyRepository = currencyRepository;
+            _currencyRepository = currencyRepository;
         }
-
-        public ICurrencyRepository CurrencyRepository { get; set; }
 
         public async ValueTask<List<HistoryCurrencyQueryResult>> HandleAsync(HistoryCurrencyQuery query)
         {
@@ -25,7 +24,7 @@ namespace CurrencyDataProvider.Core.Currency
             var resultDate = new DateTimeOffset(DateTime.UtcNow.AddHours(-period)).ToUnixTimeSeconds().ToString();
             int.TryParse(resultDate, out int fromTimeStamp);
 
-            var historyRecords = await CurrencyRepository.GetHistoryForCurrency(query.Currency, fromTimeStamp);
+            var historyRecords = await _currencyRepository.GetHistoryForCurrency(query.Currency, fromTimeStamp);
 
             var result = new List<HistoryCurrencyQueryResult>();
 

@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+
 using CurrencyDataProvider.Core.Base;
 using CurrencyDataProvider.Data;
 using CurrencyDataProvider.Domain;
@@ -7,16 +8,16 @@ namespace CurrencyDataProvider.Core.Currency
 {
     public class AddCurrenciesInformationCommandHandler : ICommandHandler<AddCurrenciesInformationCommand>
     {
+        private readonly ICurrencyRepository _currencyRepository;
+
         public AddCurrenciesInformationCommandHandler(ICurrencyRepository currencyRepository)
         {
-            CurrencyRepository = currencyRepository;
+            _currencyRepository = currencyRepository;
         }
-
-        public ICurrencyRepository CurrencyRepository { get; set; }
 
         public async Task HandleAsync(AddCurrenciesInformationCommand command)
         {
-            await CurrencyRepository.SaveCurrencyInfoAsync(
+            await _currencyRepository.SaveCurrencyInfoAsync(
                 new CurrenciesInformation
                 {
                     TimeStamp = command.Timestamp,

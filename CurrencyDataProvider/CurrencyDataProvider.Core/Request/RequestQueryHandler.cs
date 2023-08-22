@@ -1,21 +1,22 @@
-﻿using CurrencyDataProvider.Core.Base;
+﻿using System.Threading.Tasks;
+
+using CurrencyDataProvider.Core.Base;
 using CurrencyDataProvider.Data;
-using System.Threading.Tasks;
 
 namespace CurrencyDataProvider.Core.Request
 {
     public class RequestQueryHandler : IQueryHandler<RequestQuery, RequestQueryResult>
     {
+        private readonly IRequestRepository _requestRepository;
+
         public RequestQueryHandler(IRequestRepository requestRepository)
         {
-            RequestRepository = requestRepository;
+            _requestRepository = requestRepository;
         }
-
-        public IRequestRepository RequestRepository { get; set; }
 
         public async ValueTask<RequestQueryResult> HandleAsync(RequestQuery query)
         {
-            var request = await RequestRepository.GetRequestByRequestIdAsync(query.RequestId);
+            var request = await _requestRepository.GetRequestByRequestIdAsync(query.RequestId);
 
             var isExisting = true;
 
