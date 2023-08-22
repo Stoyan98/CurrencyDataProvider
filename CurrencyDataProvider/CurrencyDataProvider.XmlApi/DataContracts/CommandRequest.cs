@@ -9,7 +9,7 @@ namespace CurrencyDataProvider.XmlApi.DataContracts
         public string Id { get; set; }
 
         [XmlElement("get", Type = typeof(GetData))]
-        public List<GetData> Get { get; set; }
+        public GetData Get { get; set; }
     }
 
     public class GetData
