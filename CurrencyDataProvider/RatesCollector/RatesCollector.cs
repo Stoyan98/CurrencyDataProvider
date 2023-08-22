@@ -1,21 +1,30 @@
-﻿using CurrencyDataProvider.Data.EF;
+﻿using CurrencyDataProvider.Core.Base;
+using CurrencyDataProvider.Core.Currency;
+using CurrencyDataProvider.Data.EF;
 using CurrencyDataProvider.Domain;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
 namespace RatesCollector
 {
-    internal class RatesCollector
+    public class RatesCollector : IRatesCollector
     {
-        private readonly string _baseUri;
-        private readonly string _apiKey;
+        private readonly ILogger<RatesCollector> _log;
+        private readonly IConfiguration _configuration;
+        private readonly ICommandHandler<AddCurrenciesInformationCommand> _addCurrenciesInformationCommandHandler;
 
-        public RatesCollector(string baseUri, string apiKey)
+        public RatesCollector(
+            ILogger<RatesCollector> log, 
+            IConfiguration configuration,
+            ICommandHandler<AddCurrenciesInformationCommand> addCurrenciesInformationCommandHandler)
         {
-            _baseUri = baseUri;
-            _apiKey = apiKey;
+            _log = log;
+            _configuration = configuration;
+            _addCurrenciesInformationCommandHandler = addCurrenciesInformationCommandHandler;
         }
 
-        internal async Task CollectExchangeRates()
+        public async Task CollectExchangeRates()
         {
             var url = GetFixerUrl();
 
@@ -23,23 +32,38 @@ namespace RatesCollector
 
             using (var client = new HttpClient())
             {
+                _log.LogInformation($"Calling url {url}");
+
                 var response = client.GetAsync(url).Result;
                 response.EnsureSuccessStatusCode();
 
+                _log.LogInformation($"Status code {response.StatusCode} from response of enpoint: {url}");
+
+                _log.LogInformation("Response deserializing starting");
+
                 exchangeRates = DeserializeData(response.Content.ReadAsStringAsync().Result);
+
+                _log.LogInformation($"Response deserialized: {exchangeRates}");
             }
 
-            
             if (exchangeRates != null)
             {
-                var currencyInformation = ConverData(exchangeRates);
-                SaveData(currencyInformation);
+                var addCurrenciesInformationCommand = ConverData(exchangeRates);
+
+                _log.LogInformation($"Invoking HandleAsync for AddCurrenciesInformationCommandHandler");
+
+                await _addCurrenciesInformationCommandHandler.HandleAsync(addCurrenciesInformationCommand);
+
+                _log.LogInformation("AddCurrenciesInformationCommandHandler saved in Database");
             }
         }
 
         private string GetFixerUrl()
         {
-            return $"{_baseUri}latest?access_key={_apiKey}";
+            var baseUri = _configuration.GetSection("BaseUri").Value;
+            var apiKey = _configuration.GetSection("ApiKey").Value;
+
+            return $"{baseUri}latest?access_key={apiKey}";
         }
 
         private ExchangeRate DeserializeData(string data)
@@ -47,17 +71,10 @@ namespace RatesCollector
             return JsonConvert.DeserializeObject<ExchangeRate>(data);
         }
 
-        private void SaveData(CurrenciesInformation currenciesInformation)
+        private AddCurrenciesInformationCommand ConverData(ExchangeRate data)
         {
-            using (var context = new CurrencyDataProviderDbContext())
-            {
-                context.CurrenciesInformations.Add(currenciesInformation);
-                context.SaveChanges();
-            }
-        }
+            _log.LogInformation("Converting ExchangeRate object to AddCurrenciesInformationCommand");
 
-        private CurrenciesInformation ConverData(ExchangeRate data)
-        {
             var rates = new List<Rate>();
 
             foreach (var item in data.Rates)
@@ -73,14 +90,10 @@ namespace RatesCollector
                 rates.Add(rate);
             }
 
-            var currencyInfo = new CurrenciesInformation()
-            {
-                TimeStamp = int.Parse(data.TimeStamp),
-                Date = DateTime.Parse(data.Date),
-                Rates = rates
-            };
+            int.TryParse(data.TimeStamp, out int timestamp);
+            DateTime.TryParse(data.Date, out DateTime date);
 
-            return currencyInfo;
+            return new AddCurrenciesInformationCommand(timestamp, date, rates);
         }
     }
 }
