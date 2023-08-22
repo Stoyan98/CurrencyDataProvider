@@ -1,6 +1,6 @@
 ﻿namespace CurrencyDataProvider.JsonAPI.DataContracts
 {
-    public class CurrentRequest : IRequest
+    public class CurrentRequest
     {
         public string RequestId { get; set; }
 

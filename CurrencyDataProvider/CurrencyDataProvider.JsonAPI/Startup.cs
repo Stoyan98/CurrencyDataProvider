@@ -46,6 +46,11 @@ namespace CurrencyDataProvider.JsonAPI
                 .AddTransient<ICurrencyRepository, CurrencyRepository>();
 
             services.AddSwaggerGen();
+
+            services.AddStackExchangeRedisCache(options => {
+                options.Configuration = Configuration.GetConnectionString("Redis");
+                options.InstanceName = "JsonApi_";
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

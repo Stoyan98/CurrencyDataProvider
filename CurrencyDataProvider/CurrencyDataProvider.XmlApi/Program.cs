@@ -31,6 +31,11 @@ builder.Services.AddDbContext<CurrencyDataProviderDbContext>();
 builder.Services.AddTransient<IRequestRepository, RequestRepository>()
     .AddTransient<ICurrencyRepository, CurrencyRepository>();
 
+builder.Services.AddStackExchangeRedisCache(options => {
+    options.Configuration = builder.Configuration.GetConnectionString("Redis");
+    options.InstanceName = "XmlApi_";
+});
+
 var app = builder.Build();
 
 app.MapHealthChecks("/health");

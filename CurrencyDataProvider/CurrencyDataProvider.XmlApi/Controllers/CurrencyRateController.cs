@@ -2,7 +2,9 @@
 using CurrencyDataProvider.Core.Currency;
 using CurrencyDataProvider.Core.Request;
 using CurrencyDataProvider.XmlApi.DataContracts;
+using CurrencyDataProvider.XmlApi.Helpers;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace CurrencyDataProvider.XmlApi.Controllers
 {
@@ -14,17 +16,22 @@ namespace CurrencyDataProvider.XmlApi.Controllers
     {
         private readonly string DuplicateMessateString = "Duplicare requestId: {0}";
         private readonly string ServiceName = "XML_Service";
+        private readonly string RequestKey = "requestKey_{0}";
+
+        private readonly IDistributedCache _cache;
 
         public CurrencyRateController(
             IQueryHandler<CurrentCurrencyQuery, CurrentCurrencyQueryResult> currentCurrencyQueryHandler,
             IQueryHandler<HistoryCurrencyQuery, List<HistoryCurrencyQueryResult>> historyCurrencyQueryHandler,
             IQueryHandler<RequestQuery, RequestQueryResult> requestQueryHandler,
-            ICommandHandler<AddRequestCommand> addRequestCommandHandler)
+            ICommandHandler<AddRequestCommand> addRequestCommandHandler,
+            IDistributedCache cache)
         {
             CurrentCurrencyQueryHandler = currentCurrencyQueryHandler;
             HistoryCurrencyQueryHandler = historyCurrencyQueryHandler;
             RequestQueryHandler = requestQueryHandler;
             AddRequestCommandHandler = addRequestCommandHandler;
+            _cache = cache;
         }
 
         public IQueryHandler<CurrentCurrencyQuery, CurrentCurrencyQueryResult> CurrentCurrencyQueryHandler { get; set; }
@@ -86,17 +93,24 @@ namespace CurrencyDataProvider.XmlApi.Controllers
 
         private async Task<bool> HandleDuplicateRequestsAsync(string requestId, string clientId)
         {
-            var existingRequest = await RequestQueryHandler.HandleAsync(new RequestQuery(requestId));
+            var cacheKey = string.Format(RequestKey, requestId);
 
-            if (!existingRequest.IsExisting)
+            var cacheRequest = await _cache.GetRecordAsync<string>(cacheKey);
+
+            if (cacheRequest is null)
             {
-                await AddRequestCommandHandler.HandleAsync(new AddRequestCommand(
-                                                               ServiceName, 
-                                                               requestId, 
-                                                               DateTime.UtcNow, 
-                                                               clientId));
+                var existingRequest = await RequestQueryHandler.HandleAsync(new RequestQuery(requestId));
 
-                return false;
+                if (!existingRequest.IsExisting)
+                {
+                    await AddRequestCommandHandler.HandleAsync(new AddRequestCommand(ServiceName, requestId, DateTime.UtcNow, clientId));
+
+                    await _cache.SetRecordAsync(cacheKey, requestId);
+
+                    return false;
+                }
+
+                await _cache.SetRecordAsync(cacheKey, existingRequest.RequestId);
             }
 
             return true;
