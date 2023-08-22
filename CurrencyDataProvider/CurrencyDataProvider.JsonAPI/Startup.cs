@@ -1,3 +1,6 @@
+using System.Net;
+using System.Collections.Generic;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -5,15 +8,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
-
-using System.Net;
+using Microsoft.EntityFrameworkCore;
 
 using CurrencyDataProvider.Data.EF;
 using CurrencyDataProvider.Core.Base;
 using CurrencyDataProvider.Core.Currency;
 using CurrencyDataProvider.Core.Request;
 using CurrencyDataProvider.Data;
-using System.Collections.Generic;
 
 namespace CurrencyDataProvider.JsonAPI
 {
@@ -39,8 +40,7 @@ namespace CurrencyDataProvider.JsonAPI
                 .AddTransient<IQueryHandler<HistoryCurrencyQuery, List<HistoryCurrencyQueryResult>>, HistoryCurrencyQueryHandler>()
                 .AddTransient<IQueryHandler<RequestQuery, RequestQueryResult>, RequestQueryHandler>();
 
-            services.AddDbContext<CurrencyDataProviderDbContext>();
-            //services.AddDbContext<CurrencyDataProviderDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+            services.AddDbContext<CurrencyDataProviderDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
             services.AddTransient<IRequestRepository, RequestRepository>()
                 .AddTransient<ICurrencyRepository, CurrencyRepository>();

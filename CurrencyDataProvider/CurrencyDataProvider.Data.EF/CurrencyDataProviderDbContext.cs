@@ -10,14 +10,8 @@ namespace CurrencyDataProvider.Data.EF
 
         public DbSet<Request> Requests { get; set; }
 
-        public CurrencyDataProviderDbContext()
+        public CurrencyDataProviderDbContext(DbContextOptions<CurrencyDataProviderDbContext> options) : base(options)
         {
-        }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            optionsBuilder.UseSqlServer("Server=(localdb)\\mssqllocaldb; Database=CurrencyDb; Trusted_Connection=True; MultipleActiveResultSets=true");
-            base.OnConfiguring(optionsBuilder);
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

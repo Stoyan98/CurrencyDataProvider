@@ -1,10 +1,13 @@
+using System.Net;
+
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.EntityFrameworkCore;
+
 using CurrencyDataProvider.Core.Base;
 using CurrencyDataProvider.Core.Currency;
 using CurrencyDataProvider.Core.Request;
 using CurrencyDataProvider.Data;
 using CurrencyDataProvider.Data.EF;
-using Microsoft.AspNetCore.Diagnostics;
-using System.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,8 +28,7 @@ builder.Services.AddTransient<ICommandHandler<AddCurrenciesInformationCommand>, 
                 .AddTransient<IQueryHandler<HistoryCurrencyQuery, List<HistoryCurrencyQueryResult>>, HistoryCurrencyQueryHandler>()
                 .AddTransient<IQueryHandler<RequestQuery, RequestQueryResult>, RequestQueryHandler>();
 
-builder.Services.AddDbContext<CurrencyDataProviderDbContext>();
-//services.AddDbContext<CurrencyDataProviderDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<CurrencyDataProviderDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddTransient<IRequestRepository, RequestRepository>()
     .AddTransient<ICurrencyRepository, CurrencyRepository>();
