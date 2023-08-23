@@ -15,6 +15,8 @@ using CurrencyDataProvider.Core.Base;
 using CurrencyDataProvider.Core.Currency;
 using CurrencyDataProvider.Core.Request;
 using CurrencyDataProvider.Data;
+using CurrencyDataProvider.Core.RabbitMQ;
+using RabbitMQ.Client;
 
 namespace CurrencyDataProvider.JsonAPI
 {
@@ -51,6 +53,27 @@ namespace CurrencyDataProvider.JsonAPI
                 options.Configuration = Configuration.GetConnectionString("Redis");
                 options.InstanceName = "JsonApi_";
             });
+
+            SetUpRabbitMq(services, Configuration);
+        }
+
+        public void SetUpRabbitMq(IServiceCollection services, IConfiguration config)
+        {
+            var configSection = config.GetSection("RabbitMQSettings");
+            var settings = new RabbitMQSettings();
+            configSection.Bind(settings);
+            // add the settings for later use by other classes via injection
+            services.AddSingleton<RabbitMQSettings>(settings);
+
+            // As the connection factory is disposable, need to ensure container disposes of it when finished
+            services.AddSingleton<IConnectionFactory>(sp => new ConnectionFactory
+            {
+                HostName = settings.HostName
+            });
+
+            services.AddSingleton<ModelFactory>();
+            services.AddSingleton(sp => sp.GetRequiredService<ModelFactory>().CreateChannel());
+            services.AddSingleton<RabbitSender>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -8,6 +8,8 @@ using CurrencyDataProvider.Core.Currency;
 using CurrencyDataProvider.Core.Request;
 using CurrencyDataProvider.Data;
 using CurrencyDataProvider.Data.EF;
+using CurrencyDataProvider.Core.RabbitMQ;
+using RabbitMQ.Client;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,10 +35,24 @@ builder.Services.AddDbContext<CurrencyDataProviderDbContext>(options => options.
 builder.Services.AddTransient<IRequestRepository, RequestRepository>()
     .AddTransient<ICurrencyRepository, CurrencyRepository>();
 
-builder.Services.AddStackExchangeRedisCache(options => {
+builder.Services.AddStackExchangeRedisCache(options =>
+{
     options.Configuration = builder.Configuration.GetConnectionString("Redis");
     options.InstanceName = "XmlApi_";
 });
+
+var configSection = builder.Configuration.GetSection("RabbitMQSettings");
+var settings = new RabbitMQSettings();
+configSection.Bind(settings);
+
+builder.Services.AddSingleton<RabbitMQSettings>(settings);
+builder.Services.AddSingleton<IConnectionFactory>(sp => new ConnectionFactory
+{
+    HostName = settings.HostName
+});
+builder.Services.AddSingleton<ModelFactory>();
+builder.Services.AddSingleton(sp => sp.GetRequiredService<ModelFactory>().CreateChannel());
+builder.Services.AddSingleton<RabbitSender>();
 
 var app = builder.Build();
 
