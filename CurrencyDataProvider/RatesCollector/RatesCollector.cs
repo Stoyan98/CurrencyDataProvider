@@ -1,6 +1,5 @@
 ﻿using CurrencyDataProvider.Core.Base;
 using CurrencyDataProvider.Core.Currency;
-using CurrencyDataProvider.Data.EF;
 using CurrencyDataProvider.Domain;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
